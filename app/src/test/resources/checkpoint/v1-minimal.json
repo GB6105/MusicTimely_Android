@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "bootCount": 7,
+  "updatedAtEpochMs": 1760000000000,
+  "stopAtEndSnapshot": false,
+  "session": {
+    "sessionId": "old-1",
+    "state": "PAUSED",
+    "initialDurationMs": 1500000,
+    "currentTargetMs": 1500000,
+    "targetRevision": 0,
+    "durationPerUnitMs": 240000,
+    "accumulatedActiveMs": 600000,
+    "extensions": [],
+    "appliedCommandIds": ["start", "pause"]
+  }
+}

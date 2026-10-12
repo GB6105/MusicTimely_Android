@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="100.1" height="100.1" viewBox="0 0 100.1 100.1" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle id="Sunset label" cx="50.05" cy="50.05" r="50.05" fill="url(#paint0_linear_0_110)"/>
+<defs>
+<linearGradient id="paint0_linear_0_110" x1="0" y1="50.05" x2="100.1" y2="50.05" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FF9C3F"/>
+<stop offset="0.48" stop-color="#FF7544"/>
+<stop offset="1" stop-color="#FF3B4D"/>
+</linearGradient>
+</defs>
+</svg>

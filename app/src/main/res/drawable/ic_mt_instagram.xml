@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple outline camera glyph for the result share pill (Figma 46:6540 A). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+    <path
+        android:pathData="M5,1.75H11A3.25,3.25 0,0 1,14.25 5V11A3.25,3.25 0,0 1,11 14.25H5A3.25,3.25 0,0 1,1.75 11V5A3.25,3.25 0,0 1,5 1.75Z"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.5" />
+    <path
+        android:pathData="M8,5.25A2.75,2.75 0,1 1,8 10.75A2.75,2.75 0,1 1,8 5.25Z"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.5" />
+    <path
+        android:pathData="M11.6,4.4m-0.8,0a0.8,0.8 0,1 1,1.6 0a0.8,0.8 0,1 1,-1.6 0"
+        android:fillColor="#FF000000" />
+</vector>

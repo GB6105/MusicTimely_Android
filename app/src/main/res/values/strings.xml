@@ -1,0 +1,265 @@
+<resources>
+    <string name="app_name">MusicTimely</string>
+
+    <!-- 공통 -->
+    <string name="default_task">지금 하는 일</string>
+    <string name="action_finish">마치기</string>
+    <string name="action_extend">+%1$d분</string>
+
+    <!-- SCR-01 배정 -->
+    <string name="allocation_title_hint">지금 하는 일 (비워도 돼요)</string>
+    <string name="allocation_question">얼마나 하실까요?</string>
+    <string name="allocation_preset">%1$d분</string>
+    <string name="allocation_custom_label">직접 (분)</string>
+    <string name="allocation_custom_error">1~240분 사이로 적어 주세요</string>
+    <string name="allocation_translation">%1$d분이면 약 %2$d곡이에요</string>
+    <string name="allocation_screen_title">집중 세션</string>
+    <string name="allocation_task_label">지금은 이것 하나만</string>
+    <string name="allocation_unit_min">MIN</string>
+    <string name="allocation_custom_unit">SET</string>
+    <string name="allocation_custom_chip">시간 직접 정하기</string>
+    <string name="translation_minutes">%1$d분이면</string>
+    <string name="translation_songs">약 %1$d곡</string>
+    <string name="translation_loops">약 %1$d바퀴</string>
+    <string name="translation_basis_average">평균 곡 길이 %1$d분 기준</string>
+    <string name="translation_basis_loop">한 바퀴 %1$s 기준</string>
+    <string name="music_row_unset">고르지 않아도 시작할 수 있어요</string>
+    <string name="music_row_off">평균 곡 길이로 추정해요 · 재생은 음악 앱에서 해요</string>
+    <string name="music_row_counting">곡을 세고, 세션 화면에서 재생·일시정지할 수 있어요</string>
+    <string name="music_row_noise">세션 화면에서 눌러야 소리가 나요</string>
+    <string name="music_row_none">곡 분량은 평균 곡 길이로 보여 드려요</string>
+    <string name="allocation_start">%1$d곡 동안 시작</string>
+    <string name="allocation_open_ended">끝을 정하지 않고 시작</string>
+    <string name="allocation_pick_music">음악 앱 고르기</string>
+    <string name="notification_prompt_title">알림을 보여 드려도 될까요?</string>
+    <string name="notification_prompt_body">세션 중 남은 시간을 알림으로 보여 드릴게요. 허용하지 않아도 세션은 그대로 진행돼요.</string>
+    <string name="notification_prompt_continue">계속</string>
+    <string name="allocation_start_disabled">시간을 정해 주세요</string>
+
+    <!-- SCR-02·03·04 진행 -->
+    <string name="session_remaining_songs">약 %1$d곡 분량 남았어요</string>
+    <string name="session_caption">집중 세션</string>
+    <string name="session_more">더 보기</string>
+    <string name="session_control_pause">세션 잠시 멈춤</string>
+    <string name="session_control_resume">세션 다시 시작</string>
+    <string name="session_estimated_song">약 %1$d번째 곡</string>
+    <string name="session_estimated_loop">약 %1$d번째 바퀴</string>
+    <string name="session_correct">곡 맞추기</string>
+    <string name="session_correct_title">지금 몇 번째 곡인가요?</string>
+    <string name="session_correct_confirm">이 곡으로 맞추기</string>
+    <string name="session_correct_error">1에서 999 사이로 입력해 주세요</string>
+    <string name="session_correction_done">곡 표시만 맞췄어요. 정한 시간은 그대로예요.</string>
+    <string name="session_remaining_time">%1$s 남았어요</string>
+    <string name="session_cue_plain">곧 정한 시간이에요</string>
+    <string name="session_remaining_loops">약 %1$d바퀴 분량 남았어요</string>
+    <string name="session_elapsed_amount">약 %1$s곡 분량이 지났어요</string>
+    <string name="session_elapsed_of_target">%1$s 경과 · %2$d분 중</string>
+    <string name="session_elapsed">%1$s 경과</string>
+    <string name="session_estimated_note">곡 정보 없이 평균 길이로 추정 중</string>
+    <string name="session_cue_about_one_song">대략 한 곡 분량 남았어요</string>
+    <string name="session_cue_this_song">이 곡이 끝나면 정한 시간이에요</string>
+    <string name="session_paused_title">타이머만 쉬고 있어요</string>
+    <string name="session_paused_with_music">타이머와 음악이 쉬고 있어요</string>
+    <string name="session_paused_music_d0">타이머만 멈췄어요. 음악은 음악 앱에서 조절해요</string>
+    <string name="session_limit_reached">정한 시간이 됐어요</string>
+    <string name="record_spinning">레코드가 돌고 있어요</string>
+    <string name="record_still">레코드가 멈춰 있어요</string>
+    <string name="session_write_failed">이번 세션은 앱 종료 후 복원되지 않을 수 있어요</string>
+    <string name="session_chips_summary">전체 약 %1$d곡 분량</string>
+    <string name="session_chips_a11y">%1$d곡 분량 중 %2$d곡 분량 지남</string>
+    <string name="session_time_elapsed">경과</string>
+    <string name="session_time_remaining">남음</string>
+    <string name="session_song_progress">곡 진행</string>
+    <string name="session_loop_progress">바퀴 진행</string>
+    <string name="session_progress_exact">%1$d/%2$d</string>
+    <string name="session_progress_estimated">약 %1$d/%2$d</string>
+    <string name="session_progress_exact_open">%1$d번째</string>
+    <string name="session_progress_estimated_open">약 %1$d번째</string>
+    <string name="session_time_card_a11y">%1$s, %2$s</string>
+    <string name="session_caption_listening">지금 듣고 있는 곡</string>
+    <string name="session_caption_music_paused">잠시 멈춘 곡</string>
+    <string name="session_caption_handoff">%1$s에서 듣고 있는 곡</string>
+    <string name="record_label_now_playing" translatable="false">NOW PLAYING</string>
+    <string name="record_label_side" translatable="false">SIDE A</string>
+
+    <!-- 음악 패널 (SRS Android §3.1) -->
+    <string name="music_pick_app">음악 앱을 골라 주세요</string>
+    <string name="music_pick">고르기</string>
+    <string name="music_change">음악 바꾸기</string>
+    <string name="music_change_short">바꾸기</string>
+    <string name="single_source_question">음악 앱을 멈출까요?</string>
+    <string name="single_source_stop">멈추기</string>
+    <string name="single_source_keep">그대로</string>
+    <string name="noise_white">화이트 노이즈</string>
+    <string name="noise_pink">핑크 노이즈</string>
+    <string name="noise_unavailable">지금은 소리를 낼 수 없어요. 다시 시도하거나 음악 없이 진행해요</string>
+    <string name="noise_play">소리 재생</string>
+    <string name="noise_muted">볼륨이 0이라 재생하지 않았어요. 설정에서 볼륨을 올려 주세요</string>
+    <string name="noise_stop">소리 정지</string>
+    <string name="sheet_noise">내장 소리 (소리로 주변을 덮어요)</string>
+    <string name="music_average_basis">%1$s · 평균 %2$d분 기준</string>
+    <string name="music_enable_counting">곡 세기 켜기</string>
+    <string name="music_open">열기</string>
+    <string name="music_observing">곡을 세고 있어요</string>
+    <string name="music_counted">%1$d곡 지났어요</string>
+    <string name="music_counted_since">%1$d곡 지났어요 (곡 세기 시작 후)</string>
+    <string name="music_button_pause">음악 일시정지</string>
+    <string name="music_button_play">음악 재생</string>
+    <string name="music_button_open_app">음악 앱 열기</string>
+    <string name="music_stopped_hint">음악이 멈췄어요</string>
+    <string name="music_unresponsive">음악 앱에서 직접 조절해 주세요</string>
+    <string name="music_row_change">바꾸기</string>
+    <string name="music_open_manually">음악 앱을 직접 열어 주세요</string>
+    <string name="stop_at_end_waiting">지금 곡이 끝나면 음악도 멈춰요</string>
+    <string name="stop_at_end_now">지금 멈추기</string>
+    <string name="stop_at_end_keep">계속 듣기</string>
+    <string name="stop_at_end_failed">음악을 멈추지 못했어요. 음악 앱에서 멈춰 주세요</string>
+    <string name="provider_youtube_music">유튜브뮤직</string>
+    <string name="provider_spotify">스포티파이</string>
+    <string name="provider_melon">멜론</string>
+    <string name="provider_genie">지니</string>
+    <string name="provider_flo">FLO</string>
+    <string name="provider_apple_music">애플뮤직</string>
+    <string name="provider_other">음악 앱</string>
+
+    <!-- SCR-05 결과 -->
+    <string name="result_next">완료</string>
+    <string name="result_share">인스타로 공유하기</string>
+    <string name="result_share_pending">준비 중이에요</string>
+    <!-- F18 M3·M4 결과 화면 A (DEC-A19). 확인된 곡만, 평균 길이로 만든 가짜 목록 금지 -->
+    <string name="result_playlist_title">이번 플레이리스트</string>
+    <string name="result_identity_label">THIS SESSION</string>
+    <string name="result_identity_title">이번\n플레이리스트</string>
+    <string name="result_total_time_s">총 걸린 시간 %1$d초</string>
+    <string name="result_total_time_ms">총 걸린 시간 %1$d분 %2$d초</string>
+    <string name="result_total_time_hms">총 걸린 시간 %1$d시간 %2$d분 %3$d초</string>
+    <string name="result_playlist_empty">곡 정보를 가져오지 못했어요</string>
+    <string name="result_playlist_empty_note">확인되지 않은 곡은 목록에 넣지 않아요</string>
+    <string name="result_playlist_partial">곡 세기가 켜져 있던 동안 들은 곡만 있어요</string>
+
+    <!-- SCR-14 진행 알림 (작업 제목·곡명 없음) -->
+    <string name="notification_title">집중 세션</string>
+    <string name="notification_remaining_songs">약 %1$d곡 분량 남음</string>
+    <string name="notification_remaining_loops">약 %1$d바퀴 분량 남음</string>
+    <string name="noise_playing">내장 소리 재생 중</string>
+    <string name="notification_running">집중 세션 진행 중</string>
+    <string name="notification_action_pause">일시정지</string>
+    <string name="notification_action_resume">이어서</string>
+    <string name="notification_action_finish">마침</string>
+    <string name="notification_channel_progress">진행 중인 세션</string>
+    <string name="notification_channel_end">정한 시간 알림</string>
+
+    <!-- SCR-09 설정 -->
+    <string name="settings_title">설정</string>
+    <string name="settings_back">뒤로</string>
+    <string name="settings_counting">곡 세기</string>
+    <string name="settings_counting_desc">재생 중인 음악의 곡 전환을 세고, 세션 화면에서 재생·일시정지할 수 있어요</string>
+    <string name="settings_counting_waiting">시스템 설정에서 알림 접근을 허용하면 시작돼요</string>
+    <string name="settings_stop_at_end">정한 시간이 끝나면 음악도 멈추기</string>
+    <string name="settings_stop_at_end_reason">곡 세기를 켜야 쓸 수 있어요</string>
+    <string name="settings_show_songs">곡 단위 표시</string>
+    <string name="settings_pause_with_music">음악을 멈추면 타이머도 잠시 멈추기</string>
+    <string name="settings_pause_with_music_desc">음악 앱에서 10초 넘게 멈춰 두면 타이머도 쉬어요. 다시 시작은 직접 눌러 주세요</string>
+    <string name="settings_sound_reset">소리 설정 기본값으로</string>
+    <string name="settings_single_loop">한 곡 반복으로 표시 (다음 세션부터)</string>
+    <string name="settings_loop_length">반복 곡 길이 (분:초, 비우면 평균)</string>
+    <string name="settings_loop_apply">적용</string>
+    <string name="settings_loop_error">1분에서 30분 사이 분:초로 입력해 주세요</string>
+    <string name="settings_sources">저장한 음악 앱</string>
+    <string name="settings_delete_source">삭제</string>
+    <string name="settings_seen">이 앱이 본 것</string>
+    <string name="settings_delete_all">데이터 전체 삭제</string>
+    <string name="settings_delete_all_confirm">모든 데이터를 지울까요?</string>
+    <string name="settings_delete_all_body">설정, 저장한 음악 앱, 진행 중인 세션이 지워져요. 음악 앱과 파일은 그대로예요.</string>
+    <string name="settings_delete">지우기</string>
+    <string name="settings_cancel">취소</string>
+    <string name="settings_section_counting">곡 세기와 음악 연동</string>
+    <string name="settings_section_display">세션 표시</string>
+    <string name="settings_section_sound">음악과 소리</string>
+    <string name="settings_section_privacy">알림과 개인정보</string>
+    <string name="settings_show_songs_desc">끄면 곡 분량 없이 시간만 보여 드려요</string>
+    <string name="settings_average_title">평균 곡 길이</string>
+    <string name="settings_average_desc">곡 정보가 없을 때 이 길이로 곡 분량을 추정해요</string>
+    <string name="settings_minutes">%1$d분</string>
+    <string name="settings_volume_title">내장 소리 볼륨</string>
+    <string name="settings_volume_desc">앱 안에서 재생하는 소리에만 적용돼요</string>
+    <string name="settings_percent">%1$d%%</string>
+    <string name="settings_fade_in_title">시작 페이드</string>
+    <string name="settings_fade_out_title">끝 페이드</string>
+    <string name="settings_seconds">%1$s초</string>
+    <string name="settings_step_down">%1$s 줄이기</string>
+    <string name="settings_step_up">%1$s 늘리기</string>
+    <string name="settings_sources_empty">저장한 음악 앱이 없어요</string>
+    <string name="settings_seen_desc">곡 세기가 지금 보고 있는 정보를 확인해요</string>
+    <string name="settings_delete_all_desc">설정, 저장한 음악 앱, 진행 중인 세션을 지워요</string>
+    <string name="settings_footer">곡 세기를 켜면 세션 화면에서 음악을 재생·일시정지할 수 있어요. 볼륨과 곡 넘기기는 음악 앱에서 해 주세요.</string>
+    <string name="settings_permission_guide">시스템 설정 &gt; 알림 접근에서 뮤직 타이머를 끄면 권한도 해제돼요</string>
+
+    <!-- SCR-11 곡 세기 안내 (PRD 5.4 원문 대조 필요) -->
+    <string name="prompt_title">곡 세기를 켤까요?</string>
+    <string name="prompt_body">켜면 지금 재생 중인 음악의 곡이 바뀌는 것을 세고, 세션 화면에서 재생·일시정지를 할 수 있어요.</string>
+    <string name="prompt_points">• 다른 앱의 알림 내용은 읽지 않아요\n• 곡 정보는 세션 중에만 기기 안에서 쓰고, 저장하거나 보내지 않아요\n• 다음 화면의 시스템 경고는 \'알림 접근\' 권한 때문에 나와요</string>
+    <string name="prompt_turn_on">켜기</string>
+    <string name="prompt_later">나중에</string>
+
+    <!-- SCR-13 이 앱이 본 것 -->
+    <string name="seen_title">이 앱이 본 것</string>
+    <string name="seen_empty">지금은 아무것도 보고 있지 않아요</string>
+    <string name="seen_app">연결된 앱: %1$s</string>
+    <string name="seen_track">현재 곡: %1$s</string>
+    <string name="seen_track_artist">현재 곡: %1$s · %2$s</string>
+    <string name="seen_counted">센 곡: %1$d곡</string>
+    <string name="seen_command">보낸 명령: %1$s (+%2$s)</string>
+    <string name="seen_command_play">재생</string>
+    <string name="seen_command_pause">일시정지</string>
+    <string name="seen_note">이 기록은 기기 안에만 있고, 세션이 끝나면 지워져요</string>
+
+    <!-- SCR-12 공유 수신 -->
+    <string name="share_title">음악 앱 저장</string>
+    <string name="share_name_label">이름</string>
+    <string name="share_default_label">%1$s 플레이리스트</string>
+    <string name="share_save">저장</string>
+    <string name="share_cancel">취소</string>
+    <string name="share_unsupported">이 링크는 열 수 없어요. 앱만 열기로 저장할까요?</string>
+    <string name="share_app_only">%1$s 앱만 열기</string>
+    <string name="share_no_installed">설치된 지원 음악 앱이 없어요</string>
+
+    <!-- SCR-06 음악 선택 -->
+    <string name="sheet_title">음악 바꾸기</string>
+    <string name="sheet_subtitle">한 세션에는 한 소스만 사용해요</string>
+    <string name="sheet_saved">저장한 음악</string>
+    <string name="sheet_selected">%1$s (선택됨)</string>
+    <string name="sheet_add_app">%1$s 추가</string>
+    <string name="sheet_add_apps">설치된 음악 앱</string>
+    <string name="sheet_paste_label">링크 붙여넣기</string>
+    <string name="sheet_paste_save">링크 저장</string>
+    <string name="sheet_no_music">음악 없이</string>
+    <string name="sheet_note">외부 앱의 재생은 직접 눌러요. 여기서 바꿔도 타이머는 계속 갑니다.</string>
+    <string name="sheet_done">닫기</string>
+    <string name="ytm_notice">유튜브뮤직은 Premium이 아니면 다른 앱을 쓸 때 음악이 멈출 수 있어요</string>
+
+    <!-- SCR-08 생각 메모 -->
+    <string name="memo_title">생각 메모</string>
+    <string name="memo_subtitle">짧게 적고 하던 일로 돌아가요</string>
+    <string name="memo_running">메모 중에도 세션은 계속돼요</string>
+    <string name="memo_save">저장하고 돌아가기</string>
+    <string name="memo_cancel">취소</string>
+    <string name="memo_too_long">500자까지 적을 수 있어요</string>
+    <string name="memo_full">메모는 세션마다 20개까지 보관돼요</string>
+    <string name="memo_failed">저장하지 못했어요. 다시 시도해 주세요</string>
+    <string name="session_memo">생각 메모</string>
+
+    <!-- SCR-05 결과 추가 -->
+    <string name="result_memos">세션 중 적어둔 생각 %1$d개</string>
+    <string name="result_memos_note">고르지 않으면 24시간 뒤 지워져요</string>
+    <string name="result_memos_keep">계속 보관</string>
+    <string name="result_memos_discard">지우기</string>
+
+    <!-- 복원 -->
+    <string name="recovery_title">지난 세션을 이어갈까요?</string>
+    <string name="recovery_body">기기가 다시 켜졌거나 오래 지나서 시간을 확인할 수 없어요. %1$s까지 기록돼 있어요.</string>
+    <string name="recovery_resume">저장된 지점에서 이어가기</string>
+    <string name="recovery_finish">여기서 마치기</string>
+    <string name="corrupt_title">저장된 세션을 읽을 수 없어요</string>
+    <string name="corrupt_discard">지우고 새로 시작</string>
+</resources>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- DEC-A08: supported music apps only, no QUERY_ALL_PACKAGES. Re-check package names on the Play Store. -->
+    <queries>
+        <package android:name="com.google.android.apps.youtube.music" />
+        <package android:name="com.spotify.music" />
+        <package android:name="com.iloen.melon" />
+        <package android:name="com.ktmusic.geniemusic" />
+        <package android:name="skplanet.musicmate" />
+        <package android:name="com.apple.android.music" />
+        <package android:name="com.android.vending" />
+    </queries>
+
+    <application
+        android:name=".MusicTimelyApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MusicTimely">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- FR-A023 공유 수신 -->
+        <activity
+            android:name=".ui.share.ShareReceiveActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MusicTimely">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!-- 곡 세기: 알림 내용은 다루지 않는다 (MT-A3). -->
+        <service
+            android:name=".service.MediaAccessListener"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <!-- App-owned noise only; never for external music sessions (SRS Android §7.6). -->
+        <service
+            android:name=".service.NoisePlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <receiver
+            android:name=".receiver.SessionActionReceiver"
+            android:exported="false" />
+    </application>
+
+</manifest>
