@@ -18,6 +18,12 @@ interface MediaSessionHandle {
     fun isPlaying(): Boolean
     fun metadata(): TrackMetadata?
     fun positionMs(): Long?
+
+    /**
+     * Encoded album art of the current item, only while that item is still [of] (DEC-A21); null otherwise.
+     * Bitmaps published in the metadata only: `*_URI` art is never fetched (no network, FR-A038).
+     */
+    fun artwork(of: TrackMetadata): ByteArray?
     fun watch(listener: MediaSessionListener): AutoCloseable
 
     /** Only `play` and `pause` exist (FR-A046). */

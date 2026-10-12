@@ -40,16 +40,24 @@ class AndroidMediaSessionGateway(
         /** Transitional states (buffering, skipping …) count as playing so they do not read as a user pause. */
         override fun isPlaying(): Boolean = controller.playbackState?.state in PLAYING_STATES
 
-        override fun metadata(): TrackMetadata? = controller.metadata?.let { m ->
-            TrackMetadata(
-                packageName = controller.packageName,
-                title = m.getString(MediaMetadata.METADATA_KEY_TITLE) ?: m.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE),
-                artist = m.getString(MediaMetadata.METADATA_KEY_ARTIST),
-                durationMs = m.getLong(MediaMetadata.METADATA_KEY_DURATION).takeIf { it > 0 },
-            )
-        }
+        override fun metadata(): TrackMetadata? = controller.metadata?.let(::trackOf)
+
+        private fun trackOf(m: MediaMetadata) = TrackMetadata(
+            packageName = controller.packageName,
+            title = m.getString(MediaMetadata.METADATA_KEY_TITLE) ?: m.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE),
+            artist = m.getString(MediaMetadata.METADATA_KEY_ARTIST),
+            durationMs = m.getLong(MediaMetadata.METADATA_KEY_DURATION).takeIf { it > 0 },
+        )
 
         override fun positionMs(): Long? = controller.playbackState?.position?.takeIf { it >= 0 }
+
+        /** One metadata read: the bitmap is taken only if that same snapshot is still [of]'s item (DEC-A21). */
+        override fun artwork(of: TrackMetadata): ByteArray? {
+            val m = controller.metadata ?: return null
+            val now = trackOf(m)
+            if (now.title != of.title || now.artist != of.artist) return null
+            return ArtworkEncoder.fromMetadata(m)
+        }
 
         override fun watch(listener: MediaSessionListener): AutoCloseable {
             val callback = object : MediaController.Callback() {

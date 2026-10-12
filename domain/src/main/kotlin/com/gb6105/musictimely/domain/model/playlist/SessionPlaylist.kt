@@ -3,14 +3,24 @@ package com.gb6105.musictimely.domain.model.playlist
 import com.gb6105.musictimely.domain.model.observation.TrackMetadata
 import com.gb6105.musictimely.domain.model.source.Provider
 
-/** One counted song of a session (F18 M1). Titles and artists are personal data: never logged or sent (DEC-A18). */
-data class PlaylistEntry(val order: Int, val title: String, val artist: String?, val provider: Provider) {
+/**
+ * One counted song of a session (F18 M1). Titles, artists and artwork are personal data: never logged or sent
+ * (DEC-A18, DEC-A21).
+ */
+data class PlaylistEntry(
+    val order: Int,
+    val title: String,
+    val artist: String?,
+    val provider: Provider,
+    val artwork: Artwork? = null,
+) {
     companion object {
-        fun of(order: Int, track: TrackMetadata): PlaylistEntry = PlaylistEntry(
+        fun of(order: Int, track: TrackMetadata, artwork: Artwork? = null): PlaylistEntry = PlaylistEntry(
             order = order,
             title = track.title.orEmpty(),
             artist = track.artist?.takeIf { it.isNotBlank() },
             provider = Provider.fromPackage(track.packageName),
+            artwork = artwork,
         )
     }
 }

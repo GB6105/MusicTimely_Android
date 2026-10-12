@@ -2,6 +2,7 @@ package com.gb6105.musictimely.data.local
 
 import android.content.Context
 import androidx.core.util.AtomicFile
+import com.gb6105.musictimely.domain.model.playlist.Artwork
 import com.gb6105.musictimely.domain.model.playlist.PlaylistEntry
 import com.gb6105.musictimely.domain.model.playlist.SessionPlaylist
 import com.gb6105.musictimely.domain.model.source.Provider
@@ -16,11 +17,13 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.util.Base64
 
 /**
  * Session playlists (F18 M2, DEC-A18) as one JSON file in `noBackupFilesDir` (no cloud backup or device transfer),
- * written through [AtomicFile]. The only store of song titles and artists; nothing here is logged.
- * Unreadable data reads as empty and is replaced by the next write; no method throws on I/O.
+ * written through [AtomicFile]. The only store of song titles, artists and album art (base64 inside the same entry,
+ * DEC-A21), so deleting or purging a session removes its art too; nothing here is logged.
+ * Unreadable data reads as empty and is replaced by the next write; unreadable art reads as none; no method throws on I/O.
  *
  * The [Mutex] is taken before any dispatch so callers starting undispatched keep their order (FIFO lock).
  */
@@ -92,7 +95,8 @@ class FilePlaylistStore(private val context: Context, private val clock: ClockPo
             val entries = JSONArray()
             playlist.entries.forEach { e ->
                 entries.put(
-                    JSONObject().put("order", e.order).put("title", e.title).putOpt("artist", e.artist).put("provider", e.provider.name),
+                    JSONObject().put("order", e.order).put("title", e.title).putOpt("artist", e.artist).put("provider", e.provider.name)
+                        .putOpt("artwork", e.artwork?.let { Base64.getEncoder().encodeToString(it.bytes) }),
                 )
             }
             sessions.put(
@@ -117,6 +121,7 @@ class FilePlaylistStore(private val context: Context, private val clock: ClockPo
                         title = e.getString("title"),
                         artist = if (e.isNull("artist")) null else e.getString("artist"),
                         provider = Provider.valueOf(e.getString("provider")),
+                        artwork = artworkOf(e.optString("artwork")),
                     )
                 },
                 updatedAtEpochMs = s.getLong("updatedAtEpochMs"),
@@ -124,7 +129,18 @@ class FilePlaylistStore(private val context: Context, private val clock: ClockPo
         }.associateBy { it.sessionId }
     }
 
+    /** Corrupt or oversized art is dropped; the song itself stays (DEC-A21). */
+    private fun artworkOf(text: String): Artwork? {
+        if (text.isEmpty() || text.length > MAX_ARTWORK_TEXT) return null
+        return try {
+            Artwork.of(Base64.getDecoder().decode(text))
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
+
     companion object {
+        private const val MAX_ARTWORK_TEXT = (Artwork.MAX_BYTES + 2) / 3 * 4
         const val FILE_NAME = "session_playlists.json"
         private const val SCHEMA_VERSION = 1
     }

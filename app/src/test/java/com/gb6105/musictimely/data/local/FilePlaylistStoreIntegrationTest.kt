@@ -3,6 +3,7 @@ package com.gb6105.musictimely.data.local
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.gb6105.musictimely.domain.model.playlist.Artwork
 import com.gb6105.musictimely.domain.model.playlist.PlaylistEntry
 import com.gb6105.musictimely.domain.model.playlist.SessionPlaylist
 import com.gb6105.musictimely.domain.model.source.Provider
@@ -12,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import java.util.Base64
 
 /** F18 M2 기록 보관 (DEC-A18): noBackup 원자 저장, 순서·반복 보존, 결과 닫기·전체 삭제·24시간 경과 시 삭제, 손상은 빈 목록. */
 @RunWith(AndroidJUnit4::class)
@@ -99,5 +101,62 @@ class FilePlaylistStoreIntegrationTest {
         file.writeText("""{"schemaVersion":1,"sessions":[{"sessionId":"s","updatedAtEpochMs":1,"entries":[{"artist":"A"}]}]}""")
 
         assertThat(store.playlist("s")).isEmpty()
+    }
+
+    // ---- DEC-A21 앨범 아트: 곡명과 같은 파일·같은 수명 ----
+
+    private val art = Artwork.of(ByteArray(300) { (it * 7).toByte() })!!
+    private val artText = Base64.getEncoder().encodeToString(art.bytes)
+
+    private fun rawEntries(artwork: String) =
+        """{"schemaVersion":1,"sessions":[{"sessionId":"s","updatedAtEpochMs":1,"entries":[{"order":1,"title":"a","provider":"MELON","artwork":"$artwork"}]}]}"""
+
+    @Test
+    fun `artwork round trips with its song through a new store instance (DEC-A21)`() = runTest {
+        store.append("s", entry("Soft Landing").copy(artwork = art))
+        store.append("s", entry("Window Seat"))
+
+        val reopened = FilePlaylistStore(context, clock).playlist("s")
+
+        assertThat(reopened.map { it.title to it.artwork }).containsExactly("Soft Landing" to art, "Window Seat" to null).inOrder()
+    }
+
+    @Test
+    fun `deleting a session removes its artwork from storage (DEC-A21)`() = runTest {
+        store.append("a", entry("x").copy(artwork = art))
+        store.append("b", entry("y"))
+
+        store.delete("a")
+
+        assertThat(file.readText()).doesNotContain(artText)
+        assertThat(FilePlaylistStore(context, clock).playlist("b").map { it.artwork }).containsExactly(null)
+    }
+
+    @Test
+    fun `the 24 hour purge removes artwork with its playlist (DEC-A21)`() = runTest {
+        store.append("old", entry("x").copy(artwork = art))
+        clock.wallEpochMs += SessionPlaylist.TTL_MS
+        store.append("new", entry("y"))
+        clock.wallEpochMs += 1
+
+        store.purgeOlderThan(clock.wallNowEpochMs() - SessionPlaylist.TTL_MS)
+
+        assertThat(file.readText()).doesNotContain(artText)
+    }
+
+    @Test
+    fun `corrupt artwork reads as no artwork and keeps the song (DEC-A21)`() = runTest {
+        file.parentFile?.mkdirs()
+        file.writeText(rawEntries("@@not base64@@"))
+
+        assertThat(store.playlist("s").map { it.title to it.artwork }).containsExactly("a" to null)
+    }
+
+    @Test
+    fun `oversized artwork reads as no artwork and keeps the song (DEC-A21)`() = runTest {
+        file.parentFile?.mkdirs()
+        file.writeText(rawEntries(Base64.getEncoder().encodeToString(ByteArray(Artwork.MAX_BYTES + 1))))
+
+        assertThat(store.playlist("s").map { it.title to it.artwork }).containsExactly("a" to null)
     }
 }

@@ -42,6 +42,10 @@ class FakeSession(
     private var listener: MediaSessionListener? = null
     val sent = mutableListOf<MusicCommand>()
     var failNext = false
+
+    /** Album art published with the current [track] (DEC-A21). */
+    var art: ByteArray? = null
+    var artFails = false
     val watched get() = listener != null
 
     override fun isPlaying() = playing
@@ -54,6 +58,11 @@ class FakeSession(
     }
     override fun positionMs() = position
 
+    override fun artwork(of: TrackMetadata): ByteArray? {
+        if (artFails) throw IllegalStateException("bitmap gone")
+        return art.takeIf { track?.title == of.title && track?.artist == of.artist && track?.packageName == of.packageName }
+    }
+
     override fun watch(listener: MediaSessionListener): AutoCloseable {
         this.listener = listener
         return AutoCloseable { this.listener = null }
@@ -63,8 +72,9 @@ class FakeSession(
         sent += command
     }
 
-    fun changeTrack(title: String?, artist: String = "A", durationMs: Long? = 200_000) {
+    fun changeTrack(title: String?, artist: String = "A", durationMs: Long? = 200_000, art: ByteArray? = null) {
         track = TrackMetadata(packageName, title, artist, durationMs)
+        this.art = art
         listener?.onMetadataChanged()
     }
 

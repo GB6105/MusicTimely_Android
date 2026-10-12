@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gb6105.musictimely.R
+import com.gb6105.musictimely.domain.model.playlist.Artwork
 import com.gb6105.musictimely.domain.model.playlist.PlaylistEntry
 import com.gb6105.musictimely.domain.model.result.TotalTime
 import com.gb6105.musictimely.ui.component.CoverMotif
@@ -58,6 +59,8 @@ object ResultTags {
     const val IDENTITY = "result_identity"
     const val COLLAGE_TILE = "result_collage_tile"
     fun cover(index: Int) = "result_cover_$index"
+    fun coverImage(index: Int) = "result_cover_image_$index"
+    fun collageImage(index: Int) = "result_collage_image_$index"
 }
 
 /**
@@ -160,7 +163,7 @@ private fun PlaylistSection(state: ResultUiState) {
             }
         }
     } else {
-        IdentityCard()
+        IdentityCard(state.playlist.take(CoverMotif.COLLAGE_TILES).map { it.artwork })
         Spacer(Modifier.height(25.dp))
         state.playlist.forEachIndexed { index, entry -> PlaylistRow(index, entry) }
         if (state.source == SongCountSource.MIXED) {
@@ -185,10 +188,10 @@ private fun CardShell(modifier: Modifier = Modifier, content: @Composable () -> 
 
 /** Figma "Playlist identity": 2×2 cover collage with "THIS SESSION" and the two-line title. */
 @Composable
-private fun IdentityCard() {
+private fun IdentityCard(artworks: List<Artwork?>) {
     CardShell(Modifier.testTag(ResultTags.IDENTITY)) {
         Row(verticalAlignment = Alignment.Top) {
-            Collage()
+            Collage(artworks)
             Column(Modifier.padding(start = 19.dp, top = 9.dp)) {
                 Text(
                     stringResource(R.string.result_identity_label),
@@ -206,15 +209,20 @@ private fun IdentityCard() {
     }
 }
 
+/** The first four songs' album art (DEC-A21); slots without one keep the motif. */
 @Composable
-private fun Collage() {
+private fun Collage(artworks: List<Artwork?>) {
     val gap = 3.dp
     Column(verticalArrangement = Arrangement.spacedBy(gap)) {
         CoverMotif.collage().chunked(2).forEachIndexed { row, pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
                 pair.forEachIndexed { col, motif ->
-                    val last = row * 2 + col == CoverMotif.COLLAGE_TILES - 1
-                    CoverTile(motif, 55.5.dp, 8.dp, Modifier.testTag(ResultTags.COLLAGE_TILE), shifted = last)
+                    val slot = row * 2 + col
+                    CoverTile(
+                        artworks.getOrNull(slot), motif, 55.5.dp, 8.dp,
+                        imageTag = ResultTags.collageImage(slot), motifTag = ResultTags.COLLAGE_TILE,
+                        shifted = slot == CoverMotif.COLLAGE_TILES - 1,
+                    )
                 }
             }
         }
@@ -232,8 +240,9 @@ private fun PlaylistRow(index: Int, entry: PlaylistEntry) {
             .semantics(mergeDescendants = true) {},
     ) {
         CoverTile(
-            CoverMotif.variantFor(index), 40.dp, 6.dp,
-            Modifier.padding(top = 6.dp).testTag(ResultTags.cover(index)),
+            entry.artwork, CoverMotif.variantFor(index), 40.dp, 6.dp,
+            imageTag = ResultTags.coverImage(index), motifTag = ResultTags.cover(index),
+            modifier = Modifier.padding(top = 6.dp),
         )
         Column(Modifier.padding(start = 14.dp, top = 6.dp, bottom = 6.dp)) {
             Text(withNumerals(entry.title), style = MtType.body, color = MaterialTheme.colorScheme.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)

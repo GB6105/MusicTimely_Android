@@ -12,6 +12,7 @@ import com.gb6105.musictimely.domain.model.observation.SeenKind
 import com.gb6105.musictimely.domain.model.observation.SongCounter
 import com.gb6105.musictimely.domain.model.observation.TargetSelector
 import com.gb6105.musictimely.domain.model.observation.TrackMetadata
+import com.gb6105.musictimely.domain.model.playlist.Artwork
 import com.gb6105.musictimely.domain.model.playlist.PlaylistEntry
 import com.gb6105.musictimely.domain.model.source.Provider
 import com.gb6105.musictimely.domain.model.translation.ObservedItem
@@ -25,7 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * Thread confinement: every method and every gateway callback runs on the single observation thread
  * (see [ObservationCoordinator]); there are no locks. Titles and artists live in memory here; only counted
- * songs leave through [onSongCounted] to the session playlist store (DEC-A18, amends FR-A038). Memory is
+ * songs leave through [onSongCounted] to the session playlist store (DEC-A18, amends FR-A038), with the album art
+ * captured while that song was current (DEC-A21). Memory is
  * dropped when the session ends or observation turns off (FR-A039, FR-A040). Any failure of a media-session call — SecurityException after a revoke or a remote app dying — turns observation off
  * without an error dialog (FR-A037) and never reaches the timer (MT-T7).
  */
@@ -64,6 +66,10 @@ class MediaObserver(
     private var hintShown = false
     private var currentTitle: String? = null
     private var lastTrackKey: List<String>? = null
+
+    /** Album art of the item with key [artKey], captured while it was current (DEC-A21). Memory only. */
+    private var artKey: List<String>? = null
+    private var art: Artwork? = null
     private var hadTarget = false
     private var everObserved = false
     private var handedOff = false
@@ -248,6 +254,11 @@ class MediaObserver(
         val title = track.title?.takeIf { it.isNotBlank() } ?: return
         currentTitle = title
         val key = trackKey(track, title)
+        // After setCounter above: a previous item counted by this change still finds its own art under its key.
+        if (key != artKey || art == null) {
+            artKey = key
+            art = readArtwork(handle, track)
+        }
         if (key != lastTrackKey) {
             if (lastTrackKey != null) onTrackBoundary?.invoke()
             lastTrackKey = key
@@ -273,6 +284,7 @@ class MediaObserver(
         observation = ObservationStateMachine.next(observation, event)
         currentTitle = null
         lastTrackKey = null
+        forgetArtwork()
         seen.clear()
         onTargetLost?.invoke()
         publish()
@@ -289,6 +301,7 @@ class MediaObserver(
             hintShown = false
             currentTitle = null
             lastTrackKey = null
+            forgetArtwork()
             hadTarget = false
             everObserved = false
             handedOff = false
@@ -306,6 +319,15 @@ class MediaObserver(
         seen += SeenEntry(clock.monotonicNowMs(), kind, Provider.fromPackage(handle.packageName), title, artist)
     }
 
+    /** A failing or missing bitmap is no artwork; it never turns observation off or stops the count (MT-T7). */
+    private fun readArtwork(handle: MediaSessionHandle, track: TrackMetadata): Artwork? =
+        runCatching { Artwork.of(handle.artwork(track)) }.getOrNull()
+
+    private fun forgetArtwork() {
+        artKey = null
+        art = null
+    }
+
     /** Same identity rule as the song counter signature (DEC-A03): package, title, artist. */
     private fun trackKey(track: TrackMetadata, title: String) = listOf(track.packageName, title, track.artist.orEmpty())
 
@@ -314,7 +336,9 @@ class MediaObserver(
         counter = next
         val track = next?.justCounted ?: return
         // A failing playlist write must not turn observation off or stop the count (MT-T7); nothing is logged.
-        runCatching { onSongCounted?.invoke(PlaylistEntry.of(next.countedItems, track)) }
+        // The art is attached only when it was captured for this very item (DEC-A21), never the next song's.
+        val countedArt = art.takeIf { artKey == trackKey(track, track.title.orEmpty()) }
+        runCatching { onSongCounted?.invoke(PlaylistEntry.of(next.countedItems, track, countedArt)) }
     }
 
     private inline fun guarded(block: () -> Unit) {

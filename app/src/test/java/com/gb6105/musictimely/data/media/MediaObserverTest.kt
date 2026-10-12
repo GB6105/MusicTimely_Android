@@ -4,6 +4,7 @@ import com.gb6105.musictimely.domain.model.control.MusicCommand
 import com.gb6105.musictimely.domain.model.observation.ObservationState
 import com.gb6105.musictimely.domain.model.observation.SeenKind
 import com.gb6105.musictimely.domain.model.observation.TrackMetadata
+import com.gb6105.musictimely.domain.model.playlist.Artwork
 import com.gb6105.musictimely.domain.model.playlist.PlaylistEntry
 import com.gb6105.musictimely.domain.model.source.Provider
 import com.gb6105.musictimely.testing.FakeClock
@@ -342,5 +343,56 @@ class MediaObserverTest {
 
         assertThat(observer.snapshot.value.state).isEqualTo(ObservationState.OBSERVING)
         assertThat(observer.snapshot.value.countedItems).isEqualTo(1)
+    }
+
+    // ---- DEC-A21 앨범 아트 ----
+
+    private val artA = byteArrayOf(1, 1)
+    private val artB = byteArrayOf(2, 2)
+
+    @Test
+    fun `each counted song carries its own artwork, never the next song's, even when counted at the change (DEC-A21)`() {
+        observer.onSongCounted = { counted += it }
+        val session = gateway.add(FakeSession(ytm, track = song("a")).apply { art = artA })
+        observer.start(preferredPackage = ytm)
+
+        activeMs = 200_000
+        session.changeTrack("b", artist = "B", art = artB) // "a" reaches 30 s inside this change
+        activeMs = 400_000
+        session.changeTrack("c") // "b" counted here; "c" has no artwork
+        activeMs = 430_000
+        observer.onActiveTime()
+
+        assertThat(counted.map { it.title to it.artwork }).containsExactly(
+            "a" to Artwork.of(artA),
+            "b" to Artwork.of(artB),
+            "c" to null,
+        ).inOrder()
+    }
+
+    @Test
+    fun `artwork published after the title (art loading republish) is attached to that song (DEC-A21)`() {
+        observer.onSongCounted = { counted += it }
+        val session = gateway.add(FakeSession(ytm, track = song("a")))
+        observer.start(preferredPackage = ytm)
+
+        session.changeTrack("a", durationMs = 200_000, art = artA)
+        activeMs = 31_000
+        observer.onActiveTime()
+
+        assertThat(counted.single().artwork).isEqualTo(Artwork.of(artA))
+    }
+
+    @Test
+    fun `a failing artwork read neither stops observation nor the count (DEC-A21, MT-T7)`() {
+        observer.onSongCounted = { counted += it }
+        gateway.add(FakeSession(ytm, track = song("a")).apply { artFails = true })
+        observer.start(preferredPackage = ytm)
+
+        activeMs = 31_000
+        observer.onActiveTime()
+
+        assertThat(observer.snapshot.value.state).isEqualTo(ObservationState.OBSERVING)
+        assertThat(counted.map { it.title to it.artwork }).containsExactly("a" to null)
     }
 }

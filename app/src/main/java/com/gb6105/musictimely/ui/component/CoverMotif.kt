@@ -1,21 +1,30 @@
 package com.gb6105.musictimely.ui.component
 
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
+import com.gb6105.musictimely.domain.model.playlist.Artwork
 import com.gb6105.musictimely.ui.theme.MtColors
 
 /**
- * App-drawn cover artwork (Figma "Original sample cover"), not album art: album art is an open decision (rights
- * unchecked, plan M5). Rows cycle the three variants by index; the result collage shows the first four.
+ * App-drawn cover artwork (Figma "Original sample cover"), shown where a song has no album art (DEC-A21: real art
+ * in-app only, never in a share image until the rights review, plan M5). Rows cycle the three variants by index;
+ * the result collage shows the first four.
  */
 enum class CoverMotif {
     SLEEVE, STRIPES, RECORD;
@@ -35,6 +44,39 @@ enum class CoverMotif {
 fun CoverTile(motif: CoverMotif, size: Dp, radius: Dp, modifier: Modifier = Modifier, shifted: Boolean = false) {
     Canvas(modifier.size(size).clip(RoundedCornerShape(radius))) { drawCoverMotif(motif, shifted) }
 }
+
+/**
+ * The song's album art when it has a readable one, else [motif] (DEC-A21). Bytes are decoded once per artwork.
+ * Decorative either way: no content description.
+ */
+@Composable
+fun CoverTile(
+    artwork: Artwork?,
+    motif: CoverMotif,
+    size: Dp,
+    radius: Dp,
+    imageTag: String,
+    motifTag: String,
+    modifier: Modifier = Modifier,
+    shifted: Boolean = false,
+) {
+    val image = remember(artwork) { artwork?.let(::decode) }
+    if (image != null) {
+        Image(
+            image,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = modifier.size(size).clip(RoundedCornerShape(radius)).testTag(imageTag),
+        )
+    } else {
+        CoverTile(motif, size, radius, modifier.testTag(motifTag), shifted)
+    }
+}
+
+private fun decode(artwork: Artwork): ImageBitmap? = runCatching {
+    val bytes = artwork.bytes
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+}.getOrNull()
 
 fun DrawScope.drawCoverMotif(motif: CoverMotif, shifted: Boolean = false) {
     val w = size.width

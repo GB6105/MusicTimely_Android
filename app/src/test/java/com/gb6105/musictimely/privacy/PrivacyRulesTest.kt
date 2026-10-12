@@ -95,6 +95,44 @@ class PrivacyRulesTest {
         assertThat(PrivacyRules.songLeaks(listOf(logged, clean))).containsExactly("ui/result/X.kt")
     }
 
+    @Test
+    fun `album art stored outside the playlist store is a violation like a title (DEC-A21)`() {
+        val store = SourceFile("data/local/FilePlaylistStore.kt", "val a: Artwork?")
+        val cache = SourceFile("data/local/ArtCache.kt", "fun put(a: Artwork) = file.writeBytes(a.bytes)")
+        val media = SourceFile("data/media/ArtworkEncoder.kt", "Artwork.MAX_BYTES")
+        val encoderName = SourceFile("data/local/Other.kt", "ArtworkEncoder.MAX_EDGE_PX")
+
+        assertThat(PrivacyRules.songPersisters(listOf(store, cache, media, encoderName)))
+            .containsExactly("data/local/FilePlaylistStore.kt", "data/local/ArtCache.kt")
+    }
+
+    @Test
+    fun `logging next to album art is a violation (DEC-A21)`() {
+        val logged = SourceFile("ui/component/X.kt", "fun f(a: Artwork) = println(a)")
+
+        assertThat(PrivacyRules.songLeaks(listOf(logged))).containsExactly("ui/component/X.kt")
+    }
+
+    @Test
+    fun `reading album art by uri is a violation (DEC-A21)`() {
+        val uri = SourceFile("data/media/A.kt", "m.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI)")
+        val icon = SourceFile("data/media/B.kt", "METADATA_KEY_DISPLAY_ICON_URI")
+        val bitmap = SourceFile("data/media/C.kt", "m.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)")
+
+        assertThat(PrivacyRules.artworkUriReads(listOf(uri, icon, bitmap))).containsExactly("data/media/A.kt", "data/media/B.kt")
+    }
+
+    @Test
+    fun `album art next to a share intent or file provider is a violation (DEC-A21, plan M5)`() {
+        val share = SourceFile("ui/share/ShareImage.kt", "fun f(a: Artwork) = Intent(Intent.ACTION_SEND)")
+        val provider = SourceFile("ui/share/Card.kt", "Artwork; FileProvider.getUriForFile(c, x, f)")
+        val inApp = SourceFile("ui/result/ResultScreen.kt", "CoverTile(entry.artwork as Artwork?)")
+        val receive = SourceFile("ui/share/ShareReceiveActivity.kt", "Intent.ACTION_SEND")
+
+        assertThat(PrivacyRules.artworkSharers(listOf(share, provider, inApp, receive)))
+            .containsExactly("ui/share/ShareImage.kt", "ui/share/Card.kt")
+    }
+
     // ---- the real code base ----
 
     private val sources: List<SourceFile> = File("src/main/java").walkTopDown()
@@ -119,6 +157,15 @@ class PrivacyRulesTest {
         assertThat(PrivacyRules.mediaLeaks(sources)).isEmpty()
         assertThat(PrivacyRules.songPersisters(sources)).containsExactly("data/local/FilePlaylistStore.kt")
         assertThat(PrivacyRules.songLeaks(sources)).isEmpty()
+        assertThat(PrivacyRules.artworkUriReads(sources)).isEmpty()
+        assertThat(PrivacyRules.artworkSharers(sources)).isEmpty()
+    }
+
+    @Test
+    fun `album art is scanned where it is read, stored and shown (DEC-A21)`() {
+        val artFiles = sources.filter { Regex("""\bArtwork\b""").containsMatchIn(it.text) }.map { it.path }
+
+        assertThat(artFiles).containsAtLeast("data/media/ArtworkEncoder.kt", "data/local/FilePlaylistStore.kt", "ui/component/CoverMotif.kt")
     }
 
     @Test
