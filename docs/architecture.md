@@ -38,6 +38,7 @@ app/src/main/java/com/gb6105/musictimely/
 │   ├── audio/                  Media3 내장 노이즈
 │   ├── notification/           채널·진행 알림·종료 알림·알림 권한
 │   ├── alarm/                  비정확 알람 예약
+│   ├── shareimage/             공유 이미지 임시 파일·FileProvider·전송 인텐트 (F18 M5·M7)
 │   └── effect/                 타이머 부수효과 → 기능별 handler (Hilt `@IntoSet`)
 ├── service/                    MediaAccessListener(알림 접근), NoisePlaybackService(mediaPlayback FGS)
 ├── receiver/                   알람 수신, 알림 동작 수신
@@ -63,7 +64,7 @@ app/src/main/java/com/gb6105/musictimely/
 | F09 내장 소리 | `audio/` (페이드·볼륨 규칙) | `audio/` + `service/` | `music/` |
 | F10 결과·메모·설정 | `result/`, `memo/`, `settings/` | `local/`, `repository/` | `result/` (SCR-05), `memo/` (SCR-08), `settings/` (SCR-09) |
 | F12 분석 | `analytics/` (허용 필드) | `analytics/` (sink, 기본 OFF) | — |
-| F18 세션 플레이리스트 | `playlist/` (`PlaylistEntry`·`SessionPlaylist`), `result/TotalTime` | `local/FilePlaylistStore` (`PlaylistRepository`) | `result/` (SCR-05 시안 A) |
+| F18 세션 플레이리스트 | `playlist/` (`PlaylistEntry`·`SessionPlaylist`), `result/TotalTime`, `shareimage/ShareCard` | `local/FilePlaylistStore` (`PlaylistRepository`), `shareimage/` (`ShareImagePort`) | `result/` (SCR-05 시안 A), `shareimage/` (렌더러·미리보기 M6) |
 
 - 새 패키지는 필요한 시점(첫 테스트 작성 시)에 만든다. 빈 패키지를 미리 만들지 않는다
 
@@ -83,6 +84,7 @@ app/src/main/java/com/gb6105/musictimely/
 | 재생 기록 (F18, DEC-A18) | `SongCounter.justCounted`(곡 수가 오른 전이) → `MediaObserver.setCounter` → `onSongCounted` → `ObservationCoordinator.onSongCounted(sessionId, entry)` → `ObservationWiring`이 `launch(UNDISPATCHED)`로 `PlaylistRepository.append`. 저장소 `Mutex`를 관측 스레드에서 먼저 잡아 순서 보존·마침 직후 결과 읽기가 마지막 곡을 기다림. 콜백·저장 실패 격리 (MT-T7) |
 | 앨범 아트 (DEC-A21) | `MediaObserver.handleMetadata`가 곡이 현재가 될 때(또는 같은 곡 재게시로 아트가 늦게 올 때) `MediaSessionHandle.artwork(track)`으로 읽어 그 곡 키(패키지·제목·아티스트)와 함께 메모리 보관 → `setCounter`는 `justCounted` 키가 같을 때만 `PlaylistEntry.artwork`에 붙임(다음 곡 아트 0). `AndroidMediaSessionGateway`: 메타데이터 한 번 읽어 같은 곡일 때만 `ArtworkEncoder`(비트맵 ALBUM_ART→ART→DISPLAY_ICON, `*_URI` 금지, 120px 정사각·WebP/JPEG·24KB 상한). 실패 = 아트 없음 (MT-T7). 저장은 `FilePlaylistStore` 항목 안 base64(같은 수명). UI `CoverTile(artwork, …)`가 한 번 디코드, 없거나 못 읽으면 모티프. 공유 이미지 사용 금지 (`PrivacyRules.artworkSharers`) |
 | 플레이리스트 보관 (DEC-A18) | `FilePlaylistStore`: `noBackupFilesDir/session_playlists.json` 하나, `AtomicFile`, 세션별 마지막 기록 시각. 손상 = 빈 목록. 삭제: 결과 닫기(`AppViewModel.onRestart`·`continueSameTask`), `DeleteAllDataUseCase`, 시작 시 `RestoreSessionUseCase`가 24시간(`SessionPlaylist.TTL_MS` = `RestorePolicy.RESULT_TTL_MS`) 지난 것 purge. 곡명·앨범 아트를 저장하는 유일한 곳 (`PrivacyRules.songPersisters`) |
+| 공유 이미지 (DEC-A22) | 결과 [인스타로 공유하기] → `AppViewModel.openSharePreview` → `Overlay.SharePreview(ShareCard)` → `SharePreviewViewModel` → `ShareImagePort`. `AndroidShareImagePort`(data)가 `ShareImageRenderer::render`(ui, Android Canvas, DI로 주입)를 IO에서 호출해 `cacheDir/share/playlist.png` 덮어쓰기, `send()` = `ShareIntents` 인스타(`ACTION_SEND`+`setPackage`) → 시스템 공유 시트. 삭제: `onRestart`·`DeleteAllDataUseCase`·앱 시작. `ShareCard`에 아트 없음 (`PrivacyRules.artworkSharers`), 전송 경로 1곳 (`PrivacyRules.shareSenders`) |
 | UI 갱신 | 진행 화면 1초 tick은 `repeatOnLifecycle(STARTED)` 안에서만 (화면 밖 폴링 0) |
 - SRS §7.1 매니페스트 예시 경로 대응: `.observe.MediaAccessListener` → `.service.MediaAccessListener`, `.share.ShareReceiveActivity` → `.ui.share.ShareReceiveActivity`
 

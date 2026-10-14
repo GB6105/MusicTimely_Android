@@ -7,12 +7,14 @@ import com.gb6105.musictimely.domain.repository.MemoRepository
 import com.gb6105.musictimely.domain.repository.PlaylistRepository
 import com.gb6105.musictimely.domain.repository.SessionRepository
 import com.gb6105.musictimely.domain.repository.SettingsRepository
+import com.gb6105.musictimely.domain.repository.ShareImagePort
 import com.gb6105.musictimely.domain.repository.SourceRepository
 import com.gb6105.musictimely.domain.repository.TimerEffectSink
 
 /**
  * FR-A071: stop what the live session runs (alarm, stop-at-end, observation, notifications), then delete the
- * checkpoint, settings, saved sources, thought memos and session playlists (DEC-A18). The system
+ * checkpoint, settings, saved sources, thought memos, session playlists (DEC-A18) and the temporary share
+ * image (DEC-A22). The system
  * notification-access permission cannot be revoked by the app; the UI explains how. External music and files are never touched.
  */
 class DeleteAllDataUseCase(
@@ -23,6 +25,7 @@ class DeleteAllDataUseCase(
     private val memos: MemoRepository,
     private val sessions: SessionRepository,
     private val playlists: PlaylistRepository,
+    private val shareImages: ShareImagePort,
 ) {
     suspend operator fun invoke() {
         // Under the session lock: a concurrent alarm or notification action cannot revive the session (review 2 L7).
@@ -41,5 +44,6 @@ class DeleteAllDataUseCase(
         sources.clear()
         memos.clear()
         playlists.clear()
+        shareImages.clear()
     }
 }

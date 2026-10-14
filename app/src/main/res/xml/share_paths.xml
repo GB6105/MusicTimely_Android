@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- F18 M7 (DEC-A22): only the temporary share image folder, cacheDir/share/. -->
+<paths>
+    <cache-path name="share" path="share/" />
+</paths>

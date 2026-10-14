@@ -1,9 +1,12 @@
 package com.gb6105.musictimely.ui.result
 
 import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -35,6 +38,7 @@ class ResultFeatureTest {
 
     private val minute = 60_000L
     private var restarted = false
+    private var shareOpened = 0
 
     private fun sessionOf(activeMs: Long, extensions: List<Long> = emptyList()) = TimerSession(
         sessionId = "s", state = TimerState.ENDED,
@@ -61,6 +65,7 @@ class ResultFeatureTest {
                 onRestart = { restarted = true },
                 onKeepMemos = onKeepMemos,
                 onDiscardMemos = onDiscardMemos,
+                onShare = { shareOpened++ },
             )
         }
     }
@@ -215,31 +220,33 @@ class ResultFeatureTest {
         compose.onNodeWithText("세션 중 적어둔 생각", substring = true).assertDoesNotExist()
     }
 
-    // ---- 공유 버튼 (M5~M7 미구현 → 비활성) ----
+    // ---- 공유 버튼 (F18 M5~M7, DEC-A22) ----
 
     @Test
-    fun `the share button is shown but disabled until sharing is built (DEC-A20, M5-M7 pending)`() {
+    fun `with songs the share button is live and opens the preview (DEC-A22)`() {
         showPlaylist(listOf(song("a")))
 
-        compose.onNodeWithText("인스타로 공유하기").assertIsDisplayed().assertIsNotEnabled()
+        compose.onNodeWithText("인스타로 공유하기").assertIsDisplayed().assertIsEnabled().performClick()
+
+        assertThat(shareOpened).isEqualTo(1)
     }
 
     @Test
-    fun `the share button is disabled in the empty state too (Figma A empty)`() {
+    fun `the share button is disabled in the empty state (Figma A empty)`() {
         showPlaylist(emptyList(), observed = null)
 
         compose.onNodeWithText("인스타로 공유하기").assertIsDisplayed().assertIsNotEnabled()
+        compose.onNodeWithTag(ResultTags.SHARE).performClick()
+
+        assertThat(shareOpened).isEqualTo(0)
     }
 
     @Test
-    fun `the disabled share button tells screen readers it is not ready yet`() {
+    fun `the share button is a 48dp button for screen readers`() {
         showPlaylist(listOf(song("a")))
 
-        compose.onNodeWithText("인스타로 공유하기").assertHasNoClickAction()
-        compose.onNodeWithTag(ResultTags.SHARE).assertExists()
-        assertThat(
-            compose.onNodeWithTag(ResultTags.SHARE).fetchSemanticsNode().config[SemanticsProperties.StateDescription],
-        ).isEqualTo("준비 중이에요")
+        compose.onNodeWithTag(ResultTags.SHARE).assertHeightIsAtLeast(48.dp)
+        assertThat(compose.onNodeWithTag(ResultTags.SHARE).fetchSemanticsNode().config[SemanticsProperties.Role]).isEqualTo(Role.Button)
     }
 
     // ---- DEC-A20으로 제거된 항목 ----

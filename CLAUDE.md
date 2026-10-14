@@ -52,8 +52,10 @@
 - `play` 전송 경로 = 사용자 음악 버튼 + 타이머 연동 재생(DEC-A16: 이 앱이 타이머와 함께 멈춘 같은 곡만) 2곳. `play`·`pause` 외 메서드 호출 금지
 - 리스너에 `onNotificationPosted`/`onNotificationRemoved` 오버라이드 금지
 - 곡 제목·아티스트·시그니처: 기본 메모리 전용. 예외(DEC-A18·A21) = 센 곡의 제목·아티스트·앨범 아트(앱 안 표시만, 공유 이미지 금지)만 `FilePlaylistStore`(noBackup)에 결과 닫기 전까지 최대 24시간. 그 외 저장·로그·예외 메시지·분석 금지
+- 공유 이미지(DEC-A22): 곡명·아티스트만 `cacheDir/share/` PNG 1개, 결과 닫기·전체 삭제·앱 시작 시 삭제. 외부 전송은 사용자 탭 → `data/shareimage/ShareIntents.kt` 1곳만. 앨범 아트 금지
 - `data/media`: 네트워크·로그 출력 금지
 - 매니페스트 금지: `SCHEDULE_EXACT_ALARM`, `USE_EXACT_ALARM`, `QUERY_ALL_PACKAGES`, `READ_MEDIA_AUDIO`, `MEDIA_CONTENT_CONTROL`, 접근성 서비스, specialUse FGS
+- `<queries>`: 지원 음악 앱·Play 스토어 + 예외 `com.instagram.android`(DEC-A22 공유)만
 - 음악 레이어 실패가 타이머를 멈추면 안 됨 (MT-T7)
 - 문구: 존댓말, `strings.xml` 리소스. 추정을 실제 청취로 단정 금지, 정시 알림 보장 문구 금지
 - 터치 48dp, 대비 4.5:1, 글꼴 200%, 모션 줄이기 대응

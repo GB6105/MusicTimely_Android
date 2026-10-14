@@ -3,7 +3,9 @@ package com.gb6105.musictimely.ui.app
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gb6105.musictimely.domain.model.playlist.PlaylistEntry
+import com.gb6105.musictimely.domain.model.result.TotalTime
 import com.gb6105.musictimely.domain.model.session.RestoreDecision
+import com.gb6105.musictimely.domain.model.shareimage.ShareCard
 import com.gb6105.musictimely.domain.model.timer.TimerCommand
 import com.gb6105.musictimely.domain.model.timer.TimerSession
 import com.gb6105.musictimely.domain.model.timer.TimerState
@@ -13,6 +15,7 @@ import com.gb6105.musictimely.domain.repository.MemoRepository
 import com.gb6105.musictimely.domain.repository.MusicControlPort
 import com.gb6105.musictimely.domain.repository.ObservedCount
 import com.gb6105.musictimely.domain.repository.PlaylistRepository
+import com.gb6105.musictimely.domain.repository.ShareImagePort
 import com.gb6105.musictimely.domain.usecase.session.ReconcileSessionUseCase
 import com.gb6105.musictimely.domain.usecase.session.RestoreSessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,6 +45,9 @@ sealed interface Overlay {
     data object MusicSheet : Overlay
     data object Seen : Overlay
     data class Memo(val sessionId: String) : Overlay
+
+    /** F18 M6 (DEC-A22): preview of the result's share image. */
+    data class SharePreview(val card: ShareCard) : Overlay
 }
 
 /** Top-level route from the restored session state (User Flow 4:1327). */
@@ -54,6 +60,7 @@ class AppViewModel @Inject constructor(
     private val music: MusicControlPort,
     private val memos: MemoRepository,
     private val playlists: PlaylistRepository,
+    private val shareImages: ShareImagePort,
 ) : ViewModel() {
     private val _route = MutableStateFlow<AppRoute>(AppRoute.Loading)
     val route: StateFlow<AppRoute> = _route
@@ -88,6 +95,14 @@ class AppViewModel @Inject constructor(
             _route.value = routeFor(restore())
             reconcile()
         }
+        // DEC-A22: a share image left by a killed process is never kept; the preview renders afresh.
+        viewModelScope.launch { shareImages.clear() }
+    }
+
+    /** F18 M6: only a result with confirmed songs can be shared (the button is disabled otherwise). */
+    fun openSharePreview() {
+        val result = _route.value as? AppRoute.Result ?: return
+        ShareCard.of(TotalTime.of(result.session.accumulatedActiveMs), result.playlist)?.let { open(Overlay.SharePreview(it)) }
     }
 
     /** App back on screen: re-derive notifications and observation from the stored state (SRS v1 §7.2). */
@@ -120,12 +135,16 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    /** Closing the result deletes it and its playlist (SRS v1 §9.2, DEC-A18: kept only until the result closes). */
+    /**
+     * Closing the result deletes it, its playlist and the share image (SRS v1 §9.2, DEC-A18: kept only until the
+     * result closes; DEC-A22).
+     */
     fun onRestart() {
         val closed = (_route.value as? AppRoute.Result)?.session?.sessionId
         _route.value = AppRoute.Allocation
         viewModelScope.launch {
             closed?.let { playlists.delete(it) }
+            shareImages.clear()
             repository.withLock {
                 if (repository.active()?.state == TimerState.ENDED) repository.clear()
             }

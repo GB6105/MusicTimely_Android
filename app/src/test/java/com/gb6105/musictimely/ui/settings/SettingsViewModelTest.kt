@@ -9,6 +9,7 @@ import com.gb6105.musictimely.testing.FakeCheckpointStore
 import com.gb6105.musictimely.testing.FakeCountingAccess
 import com.gb6105.musictimely.testing.FakeMemoRepository
 import com.gb6105.musictimely.testing.FakePlaylistRepository
+import com.gb6105.musictimely.testing.FakeShareImagePort
 import com.gb6105.musictimely.testing.FakeSessionRepository
 import com.gb6105.musictimely.testing.FakeSettingsRepository
 import com.gb6105.musictimely.testing.FakeSourceRepository
@@ -29,7 +30,7 @@ class SettingsViewModelTest {
     private val access = FakeCountingAccess()
     private val store = FakeCheckpointStore()
     // Built after MainDispatcherRule has set Main, so init collectors never race a stale dispatcher.
-    private val viewModel by lazy { SettingsViewModel(settings, sources, access, DeleteAllDataUseCase(store, settings, sources, FakeTimerEffectSink(), FakeMemoRepository(), FakeSessionRepository(), FakePlaylistRepository())) }
+    private val viewModel by lazy { SettingsViewModel(settings, sources, access, DeleteAllDataUseCase(store, settings, sources, FakeTimerEffectSink(), FakeMemoRepository(), FakeSessionRepository(), FakePlaylistRepository(), FakeShareImagePort())) }
 
     @Test
     fun `turning counting on without access shows the prompt instead (FR-A031)`() = runTest {

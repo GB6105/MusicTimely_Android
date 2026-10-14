@@ -45,10 +45,14 @@ import com.gb6105.musictimely.domain.usecase.source.RegisterSourceUseCase
 import com.gb6105.musictimely.testing.FakeCountingAccess
 import com.gb6105.musictimely.testing.FakeMemoRepository
 import com.gb6105.musictimely.testing.FakePlaylistRepository
+import com.gb6105.musictimely.testing.FakeShareImagePort
 import com.gb6105.musictimely.testing.FakeNoisePort
 import com.gb6105.musictimely.testing.FakeNotificationPermission
 import com.gb6105.musictimely.ui.memo.MemoTags
 import com.gb6105.musictimely.ui.memo.MemoViewModel
+import com.gb6105.musictimely.ui.shareimage.SharePreviewTags
+import com.gb6105.musictimely.ui.shareimage.SharePreviewViewModel
+import com.gb6105.musictimely.domain.model.result.TotalTime
 import androidx.compose.ui.test.performTextInput
 import org.junit.Rule
 import org.junit.Test
@@ -70,6 +74,7 @@ class AppFlowFeatureTest {
     private val launcher = FakeMusicLauncher()
     private val memos = FakeMemoRepository()
     private val playlists = FakePlaylistRepository(clock)
+    private val shareImages = FakeShareImagePort()
     private val music = FakeMusicControl()
     private val dispatch = DispatchTimerCommandUseCase(repository, clock, sink)
 
@@ -80,18 +85,19 @@ class AppFlowFeatureTest {
     private val sessionVm by lazy { SessionViewModel(repository, dispatch, clock, music, settings, sources, launcher, noisePort) }
 
     private fun show() {
-        app = AppViewModel(RestoreSessionUseCase(store, clock, playlists), repository, dispatch, ReconcileSessionUseCase(repository, clock, sink), music, memos, playlists)
+        app = AppViewModel(RestoreSessionUseCase(store, clock, playlists), repository, dispatch, ReconcileSessionUseCase(repository, clock, sink), music, memos, playlists, shareImages)
         compose.setContent {
             MusicTimelyApp(
                 appViewModel = app,
                 allocationViewModel = { remember { AllocationViewModel(OpenSessionUseCase(repository) { "s-${clock.monotonicMs}" }, dispatch, settings, FakeNotificationPermission(), sources, launcher) } },
                 sessionViewModel = { sessionVm },
-                settingsViewModel = { remember { SettingsViewModel(settings, sources, FakeCountingAccess(), DeleteAllDataUseCase(store, settings, sources, sink, memos, repository, playlists)) } },
+                settingsViewModel = { remember { SettingsViewModel(settings, sources, FakeCountingAccess(), DeleteAllDataUseCase(store, settings, sources, sink, memos, repository, playlists, shareImages)) } },
                 musicSheetViewModel = {
                     remember { MusicSheetViewModel(sources, settings, launcher, RegisterSourceUseCase(sources, clock) { "src" }, FakeCountingAccess(), noisePort) }
                 },
                 seenViewModel = { remember { SeenViewModel(music) } },
                 memoViewModel = { remember { MemoViewModel(memos) } },
+                sharePreviewViewModel = { remember { SharePreviewViewModel(shareImages) } },
                 tickIntervalMs = Long.MAX_VALUE,
             )
         }
@@ -447,5 +453,72 @@ class AppFlowFeatureTest {
         show()
 
         assertThat(runBlocking { playlists.playlist("old") }).isEmpty()
+    }
+
+    // ---- F18 M5~M7 공유 (DEC-A22) ----
+
+    private fun finishWithSongs(vararg titles: String): String {
+        show()
+        compose.onNodeWithTag(AllocationTags.START).performClick()
+        compose.waitForIdle()
+        val id = runBlocking { repository.active()!!.sessionId }
+        runBlocking { titles.forEach { playlists.append(id, songOf(it)) } }
+        music.lastObserved.value = ObservedCount(count = titles.size, startedMidSession = false)
+        compose.onNodeWithText("마치기").performClick()
+        compose.waitForIdle()
+        return id
+    }
+
+    @Test
+    fun `the share button opens a preview of this playlist and 돌아가기 returns to the result (F18 M6, DEC-A22)`() {
+        finishWithSongs("Slow Bloom", "Soft Landing")
+
+        compose.onNodeWithText("인스타로 공유하기").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithTag(SharePreviewTags.IMAGE).assertIsDisplayed()
+        assertThat(shareImages.prepared.single().songs.map { it.title }).containsExactly("Slow Bloom", "Soft Landing").inOrder()
+        assertThat(shareImages.prepared.single().totalTime).isEqualTo(TotalTime.of(runBlocking { repository.active()!!.accumulatedActiveMs }))
+        assertThat(shareImages.sent).isEqualTo(0)
+
+        compose.onNodeWithText("돌아가기").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Slow Bloom").assertIsDisplayed()
+    }
+
+    @Test
+    fun `sending from the preview leaves the timer result as it was (DEC-A22)`() {
+        val id = finishWithSongs("Slow Bloom")
+        compose.onNodeWithText("인스타로 공유하기").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText("인스타 스토리로 보내기").performClick()
+        compose.waitForIdle()
+
+        assertThat(shareImages.sent).isEqualTo(1)
+        assertThat(runBlocking { playlists.playlist(id) }).hasSize(1)
+        assertThat(runBlocking { repository.active()!!.state }).isEqualTo(TimerState.ENDED)
+    }
+
+    @Test
+    fun `closing the result deletes the share image with the playlist (DEC-A18, DEC-A22)`() {
+        finishWithSongs("Slow Bloom")
+        compose.onNodeWithText("인스타로 공유하기").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("돌아가기").performClick()
+        compose.waitForIdle()
+        val before = shareImages.cleared
+
+        compose.onNodeWithText("완료").performClick()
+        compose.waitForIdle()
+
+        assertThat(shareImages.cleared).isEqualTo(before + 1)
+    }
+
+    @Test
+    fun `app start deletes a share image left from before (DEC-A22)`() {
+        show()
+
+        assertThat(shareImages.cleared).isEqualTo(1)
     }
 }

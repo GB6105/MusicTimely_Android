@@ -133,6 +133,50 @@ class PrivacyRulesTest {
             .containsExactly("ui/share/ShareImage.kt", "ui/share/Card.kt")
     }
 
+    @Test
+    fun `share image code touching album art or playlist entries is a violation, even without an intent (DEC-A21, DEC-A22)`() {
+        val renderer = SourceFile("ui/shareimage/ShareImageRenderer.kt", "CoverTile(entry.artwork, motif)")
+        val entries = SourceFile("ui/shareimage/Card.kt", "fun f(e: PlaylistEntry) = e.title")
+        val port = SourceFile("data/shareimage/Port.kt", "val a: Artwork?")
+        val clean = SourceFile("ui/shareimage/Clean.kt", "fun f(c: ShareCard) = drawCoverMotif(CoverMotif.variantFor(0))")
+        val result = SourceFile("ui/result/ResultScreen.kt", "CoverTile(entry.artwork as Artwork?)")
+
+        assertThat(PrivacyRules.artworkSharers(listOf(renderer, entries, port, clean, result)))
+            .containsExactly("ui/shareimage/ShareImageRenderer.kt", "ui/shareimage/Card.kt", "data/shareimage/Port.kt")
+    }
+
+    @Test
+    fun `share card songs count as song data for storage and logging rules (DEC-A22)`() {
+        val port = SourceFile("data/shareimage/AndroidShareImagePort.kt", "suspend fun prepare(card: ShareCard)")
+        val prefs = SourceFile("data/local/Prefs.kt", "fun put(s: ShareSong) = Unit")
+        val logged = SourceFile("ui/shareimage/X.kt", "import android.util.Log\nfun f(c: ShareCard) = Log.d(\"t\", c.toString())")
+
+        assertThat(PrivacyRules.songPersisters(listOf(port, prefs))).containsExactly("data/shareimage/AndroidShareImagePort.kt", "data/local/Prefs.kt")
+        assertThat(PrivacyRules.songLeaks(listOf(logged))).containsExactly("ui/shareimage/X.kt")
+    }
+
+    @Test
+    fun `every outgoing send or share sheet is reported (DEC-A22)`() {
+        val intents = SourceFile("data/shareimage/ShareIntents.kt", "Intent(Intent.ACTION_SEND).setType(MIME_PNG); Intent.createChooser(send(uri), title)")
+        val other = SourceFile("ui/result/Leak.kt", "startActivity(Intent.createChooser(x, null))")
+        val receive = SourceFile("ui/share/ShareReceiveActivity.kt", "if (intent?.action == Intent.ACTION_SEND) handle()")
+
+        assertThat(PrivacyRules.shareSenders(listOf(intents, other, receive))).containsExactly("data/shareimage/ShareIntents.kt", "ui/result/Leak.kt")
+    }
+
+    @Test
+    fun `queried packages are read from declarations only`() {
+        val manifest = """
+            <queries>
+                <!-- <package android:name="com.example.commented" /> -->
+                <package android:name="com.spotify.music" />
+                <package android:name="com.instagram.android" />
+            </queries>
+        """.trimIndent()
+
+        assertThat(PrivacyRules.queriedPackages(manifest)).containsExactly("com.spotify.music", "com.instagram.android")
+    }
+
     // ---- the real code base ----
 
     private val sources: List<SourceFile> = File("src/main/java").walkTopDown()
@@ -155,10 +199,22 @@ class PrivacyRulesTest {
         assertThat(PrivacyRules.transportTapCallers(sources)).containsExactly("ui/session/SessionViewModel.kt")
         assertThat(PrivacyRules.forbiddenTransportCalls(sources)).isEmpty()
         assertThat(PrivacyRules.mediaLeaks(sources)).isEmpty()
-        assertThat(PrivacyRules.songPersisters(sources)).containsExactly("data/local/FilePlaylistStore.kt")
+        // DEC-A22: besides the playlist store, only the temporary share image (cacheDir/share/, deleted with the playlist).
+        assertThat(PrivacyRules.songPersisters(sources))
+            .containsExactly("data/local/FilePlaylistStore.kt", "data/shareimage/AndroidShareImagePort.kt")
         assertThat(PrivacyRules.songLeaks(sources)).isEmpty()
         assertThat(PrivacyRules.artworkUriReads(sources)).isEmpty()
         assertThat(PrivacyRules.artworkSharers(sources)).isEmpty()
+        // DEC-A22: song titles leave the device through one user-tapped path only.
+        assertThat(PrivacyRules.shareSenders(sources)).containsExactly("data/shareimage/ShareIntents.kt")
+    }
+
+    @Test
+    fun `the share image code is scanned by the album art rule (DEC-A21, DEC-A22)`() {
+        assertThat(sources.map { it.path }.filter { "shareimage/" in it }).containsAtLeast(
+            "ui/shareimage/ShareImageRenderer.kt", "ui/shareimage/SharePreviewScreen.kt",
+            "data/shareimage/AndroidShareImagePort.kt", "data/shareimage/ShareIntents.kt",
+        )
     }
 
     @Test
@@ -180,5 +236,24 @@ class PrivacyRulesTest {
     @Test
     fun `the manifest declares nothing forbidden`() {
         assertThat(PrivacyRules.forbiddenManifestEntries(File("src/main/AndroidManifest.xml").readText())).isEmpty()
+    }
+
+    @Test
+    fun `queries name the supported music apps, the store and Instagram only (DEC-A08, DEC-A22)`() {
+        assertThat(PrivacyRules.queriedPackages(File("src/main/AndroidManifest.xml").readText())).containsExactly(
+            "com.google.android.apps.youtube.music", "com.spotify.music", "com.iloen.melon", "com.ktmusic.geniemusic",
+            "skplanet.musicmate", "com.apple.android.music", "com.android.vending", "com.instagram.android",
+        )
+    }
+
+    @Test
+    fun `the file provider is private and serves only the share cache folder (DEC-A22)`() {
+        val manifest = File("src/main/AndroidManifest.xml").readText()
+        val provider = Regex("<provider[^>]*FileProvider[^>]*>").find(manifest)!!.value
+        val paths = Regex("<(\\w+-path)[^>]*/>").findAll(File("src/main/res/xml/share_paths.xml").readText()).map { it.value }.toList()
+
+        assertThat(provider).contains("android:exported=\"false\"")
+        assertThat(provider).contains("android:authorities=\"\${applicationId}.fileprovider\"")
+        assertThat(paths).containsExactly("<cache-path name=\"share\" path=\"share/\" />")
     }
 }

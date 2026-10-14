@@ -16,6 +16,7 @@ import com.gb6105.musictimely.testing.FakeMemoRepository
 import com.gb6105.musictimely.testing.FakePlaylistRepository
 import com.gb6105.musictimely.testing.FakeSessionRepository
 import com.gb6105.musictimely.testing.FakeSettingsRepository
+import com.gb6105.musictimely.testing.FakeShareImagePort
 import com.gb6105.musictimely.testing.FakeSourceRepository
 import com.gb6105.musictimely.testing.FakeTimerEffectSink
 import com.google.common.truth.Truth.assertThat
@@ -32,7 +33,8 @@ class DeleteAllDataUseCaseTest {
     private val memos = FakeMemoRepository()
     private val sessions = FakeSessionRepository()
     private val playlists = FakePlaylistRepository()
-    private val delete = DeleteAllDataUseCase(store, settings, sources, sink, memos, sessions, playlists)
+    private val shareImages = FakeShareImagePort()
+    private val delete = DeleteAllDataUseCase(store, settings, sources, sink, memos, sessions, playlists, shareImages)
 
     @Test
     fun `cancels the live session's alarm, observation and notifications, then clears all stored data`() = runTest {
@@ -53,6 +55,7 @@ class DeleteAllDataUseCaseTest {
         assertThat(sources.sources.value).isEmpty()
         assertThat(memos.memosFor("s")).isEmpty()
         assertThat(playlists.playlist("s")).isEmpty() // F18 M2, DEC-A18
+        assertThat(shareImages.cleared).isEqualTo(1) // F18 M5 temporary share image, DEC-A22
         assertThat(sessions.active()).isNull()
     }
 

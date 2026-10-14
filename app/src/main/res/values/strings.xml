@@ -125,7 +125,6 @@
     <!-- SCR-05 결과 -->
     <string name="result_next">완료</string>
     <string name="result_share">인스타로 공유하기</string>
-    <string name="result_share_pending">준비 중이에요</string>
     <!-- F18 M3·M4 결과 화면 A (DEC-A19). 확인된 곡만, 평균 길이로 만든 가짜 목록 금지 -->
     <string name="result_playlist_title">이번 플레이리스트</string>
     <string name="result_identity_label">THIS SESSION</string>
@@ -136,6 +135,16 @@
     <string name="result_playlist_empty">곡 정보를 가져오지 못했어요</string>
     <string name="result_playlist_empty_note">확인되지 않은 곡은 목록에 넣지 않아요</string>
     <string name="result_playlist_partial">곡 세기가 켜져 있던 동안 들은 곡만 있어요</string>
+    <!-- F18 M5~M7 공유 이미지·미리보기 (DEC-A22). 작업 제목·날짜·추정 곡 수 없음, 앨범 아트 없음 (DEC-A21) -->
+    <string name="share_image_mark" translatable="false">MUSIC TIMELY</string>
+    <string name="share_image_more">외 %1$d곡</string>
+    <string name="share_preview_description">공유할 이미지예요. %1$s, 곡 %2$d개가 담겨 있어요</string>
+    <string name="share_preview_send">인스타 스토리로 보내기</string>
+    <string name="share_preview_back">돌아가기</string>
+    <string name="share_preview_preparing">이미지를 만들고 있어요</string>
+    <string name="share_preview_image_failed">공유 이미지를 만들지 못했어요. 타이머와 결과는 그대로예요</string>
+    <string name="share_preview_no_target">보낼 수 있는 앱을 찾지 못했어요</string>
+    <string name="share_chooser_title">플레이리스트 공유하기</string>
 
     <!-- SCR-14 진행 알림 (작업 제목·곡명 없음) -->
     <string name="notification_title">집중 세션</string>

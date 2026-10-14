@@ -26,6 +26,7 @@ import com.gb6105.musictimely.testing.FakeCheckpointStore
 import com.gb6105.musictimely.testing.FakeCountingAccess
 import com.gb6105.musictimely.testing.FakeMemoRepository
 import com.gb6105.musictimely.testing.FakePlaylistRepository
+import com.gb6105.musictimely.testing.FakeShareImagePort
 import com.gb6105.musictimely.testing.FakeSessionRepository
 import com.gb6105.musictimely.testing.FakeSettingsRepository
 import com.gb6105.musictimely.testing.FakeSourceRepository
@@ -46,7 +47,7 @@ class SettingsFeatureTest {
     private val sources = FakeSourceRepository()
     private val access = FakeCountingAccess()
     private val store = FakeCheckpointStore()
-    private val viewModel = SettingsViewModel(settings, sources, access, DeleteAllDataUseCase(store, settings, sources, FakeTimerEffectSink(), FakeMemoRepository(), FakeSessionRepository(), FakePlaylistRepository()))
+    private val viewModel = SettingsViewModel(settings, sources, access, DeleteAllDataUseCase(store, settings, sources, FakeTimerEffectSink(), FakeMemoRepository(), FakeSessionRepository(), FakePlaylistRepository(), FakeShareImagePort()))
 
     private fun show() {
         compose.setContent { SettingsRoute(viewModel, onBack = {}, onSeen = {}) }

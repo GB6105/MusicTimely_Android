@@ -14,6 +14,8 @@
         <package android:name="skplanet.musicmate" />
         <package android:name="com.apple.android.music" />
         <package android:name="com.android.vending" />
+        <!-- F18 M7 (DEC-A22): playlist image share target, the only non-music package. -->
+        <package android:name="com.instagram.android" />
     </queries>
 
     <application
@@ -63,6 +65,17 @@
         <receiver
             android:name=".receiver.SessionActionReceiver"
             android:exported="false" />
+
+        <!-- F18 M7 (DEC-A22): temporary share image only (cacheDir/share/), read grant per send. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/share_paths" />
+        </provider>
     </application>
 
 </manifest>

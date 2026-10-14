@@ -2,6 +2,7 @@ package com.gb6105.musictimely.ui.result
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,10 +29,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.disabled
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,8 +64,8 @@ object ResultTags {
 /**
  * SCR-05 / W04 as Figma "MT / Playlist / A Result" (DEC-A19, DEC-A20): title with the total time, the playlist
  * identity card, the songs directly on the background, the session memos (FR-A069) and the fixed [완료] /
- * [인스타로 공유하기] buttons. There is no close button: [완료] closes the result. Sharing (plan M5–M7) is not built
- * yet, so its button is shown disabled.
+ * [인스타로 공유하기] buttons. There is no close button: [완료] closes the result. [인스타로 공유하기] opens the share
+ * preview (F18 M6, DEC-A22); without confirmed songs it is disabled.
  */
 @Composable
 fun ResultScreen(
@@ -76,6 +74,7 @@ fun ResultScreen(
     modifier: Modifier = Modifier,
     onKeepMemos: () -> Unit = {},
     onDiscardMemos: () -> Unit = {},
+    onShare: () -> Unit = {},
 ) {
     Column(modifier.fillMaxSize()) {
         Column(
@@ -97,16 +96,16 @@ fun ResultScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = MtDimens.ScreenPadding, vertical = 12.dp),
         ) {
             PrimaryButton(stringResource(R.string.result_next), onClick = onRestart)
-            ShareButton()
+            ShareButton(enabled = state.playlist.isNotEmpty(), onClick = onShare)
         }
     }
 }
 
-/** Figma A outlined pill with the Instagram glyph. Disabled until plan M5–M7: no click, no intent. */
+/** Figma A outlined pill with the Instagram glyph. Opens the preview; nothing is sent from here (DEC-A22). */
 @Composable
-private fun ShareButton() {
+private fun ShareButton(enabled: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(MtDimens.SecondaryButtonRadius)
-    val pending = stringResource(R.string.result_share_pending)
+    val content = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
@@ -117,20 +116,16 @@ private fun ShareButton() {
             .clip(shape)
             .background(MaterialTheme.colorScheme.surface, shape)
             .testTag(ResultTags.SHARE)
-            .semantics(mergeDescendants = true) {
-                role = Role.Button
-                disabled()
-                stateDescription = pending
-            }
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 10.dp),
     ) {
         Icon(
             painterResource(R.drawable.ic_mt_instagram),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = content,
             modifier = Modifier.size(16.dp),
         )
-        Text(stringResource(R.string.result_share), style = MtType.button, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.result_share), style = MtType.button, color = content)
     }
 }
 
@@ -254,7 +249,7 @@ private fun PlaylistRow(index: Int, entry: PlaylistEntry) {
 }
 
 @Composable
-private fun totalTimeText(t: TotalTime): String = when (t.shape) {
+internal fun totalTimeText(t: TotalTime): String = when (t.shape) {
     TotalTime.Shape.SECONDS -> stringResource(R.string.result_total_time_s, t.seconds)
     TotalTime.Shape.MINUTES_SECONDS -> stringResource(R.string.result_total_time_ms, t.minutes, t.seconds)
     TotalTime.Shape.HOURS_MINUTES_SECONDS -> stringResource(R.string.result_total_time_hms, t.hours, t.minutes, t.seconds)

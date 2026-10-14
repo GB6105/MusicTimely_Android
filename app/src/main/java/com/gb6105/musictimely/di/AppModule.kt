@@ -23,6 +23,7 @@ import com.gb6105.musictimely.domain.repository.MusicLauncherPort
 import com.gb6105.musictimely.domain.repository.NoisePort
 import com.gb6105.musictimely.domain.repository.NotificationPermissionPort
 import com.gb6105.musictimely.domain.repository.SettingsRepository
+import com.gb6105.musictimely.domain.repository.ShareImagePort
 import com.gb6105.musictimely.domain.repository.SourceRepository
 import com.gb6105.musictimely.domain.usecase.settings.DeleteAllDataUseCase
 import com.gb6105.musictimely.domain.usecase.source.RegisterSourceUseCase
@@ -40,6 +41,8 @@ import com.gb6105.musictimely.data.notification.ProgressDismissal
 import com.gb6105.musictimely.data.notification.ProgressNotificationSlot
 import com.gb6105.musictimely.data.notification.SessionNotifier
 import com.gb6105.musictimely.data.repository.DefaultSessionRepository
+import com.gb6105.musictimely.data.shareimage.AndroidShareImagePort
+import com.gb6105.musictimely.ui.shareimage.ShareImageRenderer
 import com.gb6105.musictimely.domain.repository.CheckpointStore
 import com.gb6105.musictimely.domain.repository.ClockPort
 import com.gb6105.musictimely.domain.repository.PlaylistRepository
@@ -223,7 +226,13 @@ abstract class AppModule {
             memos: MemoRepository,
             sessions: SessionRepository,
             playlists: PlaylistRepository,
-        ) = DeleteAllDataUseCase(store, settings, sources, sink, memos, sessions, playlists)
+            shareImages: ShareImagePort,
+        ) = DeleteAllDataUseCase(store, settings, sources, sink, memos, sessions, playlists, shareImages)
+
+        /** F18 M5–M7 (DEC-A22): the share image is drawn by the UI renderer, kept and sent by the data layer. */
+        @Provides
+        fun shareImagePort(@ApplicationContext context: Context): ShareImagePort =
+            AndroidShareImagePort(context, render = ShareImageRenderer(context)::render)
 
         @Provides
         @IntoSet

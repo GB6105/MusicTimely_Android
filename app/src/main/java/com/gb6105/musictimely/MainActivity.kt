@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
                     musicSheetViewModel = { hiltViewModel() },
                     seenViewModel = { hiltViewModel() },
                     memoViewModel = { hiltViewModel() },
+                    sharePreviewViewModel = { hiltViewModel() },
                     modifier = Modifier.fillMaxSize(),
                 )
             }

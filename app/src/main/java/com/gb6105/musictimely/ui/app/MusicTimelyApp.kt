@@ -37,6 +37,8 @@ import com.gb6105.musictimely.ui.seen.SeenViewModel
 import com.gb6105.musictimely.ui.session.SessionViewModel
 import com.gb6105.musictimely.ui.settings.SettingsRoute
 import com.gb6105.musictimely.ui.settings.SettingsViewModel
+import com.gb6105.musictimely.ui.shareimage.SharePreviewRoute
+import com.gb6105.musictimely.ui.shareimage.SharePreviewViewModel
 
 @Composable
 fun MusicTimelyApp(
@@ -47,6 +49,7 @@ fun MusicTimelyApp(
     musicSheetViewModel: @Composable () -> MusicSheetViewModel,
     seenViewModel: @Composable () -> SeenViewModel,
     memoViewModel: @Composable () -> MemoViewModel,
+    sharePreviewViewModel: @Composable () -> SharePreviewViewModel,
     modifier: Modifier = Modifier,
     tickIntervalMs: Long = 1_000,
 ) {
@@ -57,7 +60,10 @@ fun MusicTimelyApp(
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        AppContent(appViewModel, allocationViewModel, sessionViewModel, settingsViewModel, musicSheetViewModel, seenViewModel, memoViewModel, tickIntervalMs)
+        AppContent(
+            appViewModel, allocationViewModel, sessionViewModel, settingsViewModel, musicSheetViewModel, seenViewModel, memoViewModel,
+            sharePreviewViewModel, tickIntervalMs,
+        )
     }
 }
 
@@ -70,6 +76,7 @@ private fun AppContent(
     musicSheetViewModel: @Composable () -> MusicSheetViewModel,
     seenViewModel: @Composable () -> SeenViewModel,
     memoViewModel: @Composable () -> MemoViewModel,
+    sharePreviewViewModel: @Composable () -> SharePreviewViewModel,
     tickIntervalMs: Long,
 ) {
     val route by appViewModel.route.collectAsStateWithLifecycle()
@@ -102,6 +109,10 @@ private fun AppContent(
             MemoRoute(memoViewModel(), sessionId = top.sessionId, onClose = appViewModel::closeOverlay)
             return
         }
+        is Overlay.SharePreview -> {
+            SharePreviewRoute(sharePreviewViewModel(), card = top.card, onBack = appViewModel::closeOverlay)
+            return
+        }
         null -> Unit
     }
     when (val current = route) {
@@ -129,6 +140,7 @@ private fun AppContent(
             onRestart = appViewModel::onRestart,
             onKeepMemos = { appViewModel.keepMemos(current.session.sessionId) },
             onDiscardMemos = { appViewModel.discardMemos(current.session.sessionId) },
+            onShare = appViewModel::openSharePreview,
         )
         is AppRoute.Recovery -> ChoiceScreen(
             title = stringResource(R.string.recovery_title),
